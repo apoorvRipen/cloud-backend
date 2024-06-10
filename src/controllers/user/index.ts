@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { makeResponse } from '../../lib';
+import { RESPONSE_MESSAGE, makeResponse } from '../../lib';
 import { addUserValidation, updateUserValidation } from '../../middlewares';
 import { addUser, updateUser, getUser, getUsers, getUsersWithPagination, getUsersCount, updateUsers } from '../../services';
 
@@ -20,10 +20,10 @@ router
                 const exist = await getUser(search);
 
                 if (exist) {
-                    return makeResponse(res, 400, false, 'User already exits', undefined);
+                    return makeResponse(res, 400, false, RESPONSE_MESSAGE.exit, undefined);
                 }
                 const result = await addUser(req.body);
-                await makeResponse(res, 200, true, "User created successfully", result);
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.create, result);
             } catch (error) {
                 await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
             }
@@ -44,12 +44,12 @@ router
                     });
 
                     if (isExist) {
-                        return makeResponse(res, 400, true, 'User already exits');
+                        return makeResponse(res, 400, true, RESPONSE_MESSAGE.exit);
                     }
                 }
 
                 const result = await updateUser({ _id }, payload, { new: true })
-                await makeResponse(res, 200, true, 'User updated successfully', result);
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.update, result);
             } catch (error) {
 
                 await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
@@ -60,12 +60,12 @@ router
         (req, res) => {
             const { _id } = req.query as { _id: string };
             if (!_id) {
-                return makeResponse(res, 400, false, "_id is required", undefined);
+                return makeResponse(res, 400, false, RESPONSE_MESSAGE.id_required, undefined);
             }
 
             getUser({ _id, isDeleted: false })
                 .then(async (result) => {
-                    await makeResponse(res, 200, true, "User fetched successfully", result);
+                    await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, result);
                 })
                 .catch(async error => {
                     await makeResponse(res, 400, false, error.message, undefined);
@@ -76,11 +76,11 @@ router
     .delete('/', (req, res) => {
         const { _ids } = req.body as any;
         if (!_ids || !_ids?.length) {
-            return makeResponse(res, 400, false, "_id is required", undefined);
+            return makeResponse(res, 400, false, RESPONSE_MESSAGE.id_required, undefined);
         }
         updateUsers({ _id: { $in: _ids } }, { isDeleted: true }, { new: true })
             .then(async (result) => {
-                await makeResponse(res, 200, true, "User deleted successfully", result);
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.delete, result);
             })
             .catch(async error => {
                 await makeResponse(res, 400, false, error.message, undefined);
@@ -118,14 +118,14 @@ router
                 skip = (page - 1) * limit;
                 const documentsCount = await getUsersCount(searchQuery);
                 const data = await getUsersWithPagination(searchQuery, { __v: 0 }, { skip, limit });
-                await makeResponse(res, 200, true, "User fetched successfully", data, {
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, data, {
                     page,
                     totalPages: Math.ceil(documentsCount / limit),
                     totalRecords: documentsCount
                 });
             } else {
                 const data = await getUsers(searchQuery, { __v: 0 });
-                await makeResponse(res, 200, true, "User fetched successfully", data);
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, data);
             }
         } catch (error: any) {
             await makeResponse(res, 400, false, error.message, undefined);

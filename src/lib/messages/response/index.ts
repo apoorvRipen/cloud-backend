@@ -3,6 +3,8 @@ export const RESPONSE_MESSAGE = {
     fetch: 'Record fetched successfully',
     delete: 'Record deleted successfully',
     create: 'Record created successfully',
+    update: 'Record update successfully',
+    exit: 'Record already exits',
     unknown_error: 'An unknown error occurred',
     unauthorized: 'unauthorized',
     id_required: '_id is required',

@@ -42,6 +42,9 @@ const schema = new Schema({
         },
         mobileNumber: phoneSchema
     },
+    password: {
+        type: String,
+    },
 }, { timestamps: true });
 
 const USER = model<IUser>('user', schema);

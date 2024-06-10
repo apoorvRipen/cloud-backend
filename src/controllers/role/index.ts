@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { makeResponse } from '../../lib';
+import { RESPONSE_MESSAGE, makeResponse } from '../../lib';
 import { addRoleValidation, updateRoleValidation } from '../../middlewares';
 import { addRole, updateRole, getRole, getRoles, getRolesWithPagination, getRolesCount, updateRoles } from '../../services';
 
@@ -19,10 +19,10 @@ router
                 const exist = await getRole(search);
 
                 if (exist) {
-                    return makeResponse(res, 400, false, 'Role already exits', undefined);
+                    return makeResponse(res, 400, false, RESPONSE_MESSAGE.exit, undefined);
                 }
                 const result = await addRole(req.body);
-                await makeResponse(res, 200, true, "Role created successfully", result);
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.create, result);
             } catch (error) {
                 await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
             }
@@ -42,12 +42,12 @@ router
                     });
 
                     if (isExist) {
-                        return makeResponse(res, 400, true, 'Role already exits');
+                        return makeResponse(res, 400, true, RESPONSE_MESSAGE.exit);
                     }
                 }
 
                 const result = await updateRole({ _id }, payload, { new: true })
-                await makeResponse(res, 200, true, 'Role updated successfully', result);
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.update, result);
             } catch (error) {
 
                 await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
@@ -58,12 +58,12 @@ router
         (req, res) => {
             const { _id } = req.query as { _id: string };
             if (!_id) {
-                return makeResponse(res, 400, false, "_id is required", undefined);
+                return makeResponse(res, 400, false, RESPONSE_MESSAGE.id_required, undefined);
             }
 
             getRole({ _id, isDeleted: false })
                 .then(async (result) => {
-                    await makeResponse(res, 200, true, "Role fetched successfully", result);
+                    await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, result);
                 })
                 .catch(async error => {
                     await makeResponse(res, 400, false, error.message, undefined);
@@ -74,11 +74,11 @@ router
     .delete('/', (req, res) => {
         const { _ids } = req.body as any;
         if (!_ids || !_ids?.length) {
-            return makeResponse(res, 400, false, "_id is required", undefined);
+            return makeResponse(res, 400, false, RESPONSE_MESSAGE.id_required, undefined);
         }
         updateRoles({ _id: { $in: _ids } }, { isDeleted: true }, { new: true })
             .then(async (result) => {
-                await makeResponse(res, 200, true, "Role deleted successfully", result);
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.delete, result);
             })
             .catch(async error => {
                 await makeResponse(res, 400, false, error.message, undefined);
@@ -116,14 +116,14 @@ router
                 skip = (page - 1) * limit;
                 const documentsCount = await getRolesCount(searchQuery);
                 const data = await getRolesWithPagination(searchQuery, { __v: 0 }, { skip, limit });
-                await makeResponse(res, 200, true, "Role fetched successfully", data, {
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, data, {
                     page,
                     totalPages: Math.ceil(documentsCount / limit),
                     totalRecords: documentsCount
                 });
             } else {
                 const data = await getRoles(searchQuery, { __v: 0 });
-                await makeResponse(res, 200, true, "Role fetched successfully", data);
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, data);
             }
         } catch (error: any) {
             await makeResponse(res, 400, false, error.message, undefined);

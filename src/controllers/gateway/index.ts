@@ -42,4 +42,4 @@ router.route('/')
         await makeResponse(res, 200, true, '', user);
     });
 
-export const gatewayRouter = router;
+export const gatewayController = router;

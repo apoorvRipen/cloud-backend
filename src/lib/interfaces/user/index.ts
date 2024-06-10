@@ -23,6 +23,7 @@ export interface IUser {
     status: "ACTIVE" | "INACTIVE" | "DELETED"
     firstName: string;
     lastName: string;
+    password: string;
     gender: 'MALE' | 'FEMALE' | 'TRANSGENDER';
     contact?: Contact;
 }
