@@ -63,7 +63,7 @@ router
                 return makeResponse(res, 400, false, RESPONSE_MESSAGE.id_required, undefined);
             }
 
-            getUser({ _id, isDeleted: false })
+            getUser({ _id, status: { $ne: "DELETED" } })
                 .then(async (result) => {
                     await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, result);
                 })
@@ -78,7 +78,7 @@ router
         if (!_ids || !_ids?.length) {
             return makeResponse(res, 400, false, RESPONSE_MESSAGE.id_required, undefined);
         }
-        updateUsers({ _id: { $in: _ids } }, { isDeleted: true }, { new: true })
+        updateUsers({ _id: { $in: _ids } }, { status: "DELETED" }, { new: true })
             .then(async (result) => {
                 await makeResponse(res, 200, true, RESPONSE_MESSAGE.delete, result);
             })
@@ -91,7 +91,7 @@ router
     .get('/list', async (req, res) => {
         const query = req.query as any;
 
-        const searchQuery: any = query.search ? { isDeleted: false, $or: [] } : { isDeleted: false };
+        const searchQuery: any = query.search ? { status: { $ne: "DELETED" }, $or: [] } : { status: { $ne: "DELETED" } };
 
         const keys = Object.keys(query);
         keys.map((key: string) => {

@@ -29,7 +29,6 @@ const userRoleSchema = new Schema({
     },
     createdBy: {
         type: Types.ObjectId,
-        required: true,
         ref: 'user'
     }
 }, {
