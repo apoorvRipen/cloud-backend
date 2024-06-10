@@ -2,7 +2,7 @@ import joi from 'joi';
 import { makeResponse } from '../../../lib';
 
 export const addRoleValidation = (req: any, res: any, next: any) => {
-    const activity = joi.object({
+    const schema = joi.object({
         name: joi.string()
             .required(),
         description: joi.string()
@@ -12,7 +12,7 @@ export const addRoleValidation = (req: any, res: any, next: any) => {
 
     });
 
-    const { error } = activity.validate(req.body);
+    const { error } = schema.validate(req.body);
     if (error) {
         return makeResponse(res, 400, false, error.message);
     }
@@ -20,7 +20,7 @@ export const addRoleValidation = (req: any, res: any, next: any) => {
 };
 
 export const updateRoleValidation = (req: any, res: any, next: any) => {
-    const activity = joi.object({
+    const schema = joi.object({
         _id: joi.string()
             .required(),
         name: joi.string()
@@ -35,7 +35,7 @@ export const updateRoleValidation = (req: any, res: any, next: any) => {
             .optional()
     });
 
-    const { error } = activity.validate(req.body);
+    const { error } = schema.validate(req.body);
     if (error) {
         return makeResponse(res, 400, false, error.message);
     }

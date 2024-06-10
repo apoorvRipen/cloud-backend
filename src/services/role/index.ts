@@ -5,28 +5,44 @@ const addRole = async (payload: any) =>
 
 const getRole = async (search = {}, project = {}) =>
   ROLE.findOne(search, project)
+    .populate({
+      path: 'createdBy',
+      select: 'firstName lastName'
+    })
     .sort({ _id: -1 })
     .lean()
     .exec();
 
 const getRoles = async (search = {}, project = {}) =>
   ROLE.find(search, project)
+    .populate({
+      path: 'createdBy',
+      select: 'firstName lastName'
+    })
     .sort({ _id: -1 })
     .lean()
     .exec();
 
-const updateRole = async (search = {}, payload = {}, optional={}) =>
+const updateRole = async (search = {}, payload = {}, optional = {}) =>
   ROLE.findOneAndUpdate(search, payload, optional)
+    .populate({
+      path: 'createdBy',
+      select: 'firstName lastName'
+    })
     .lean()
     .exec();
 
-const updateRoles = async (search = {}, payload = {}, optional={}) =>
+const updateRoles = async (search = {}, payload = {}, optional = {}) =>
   ROLE.updateMany(search, payload, optional)
     .lean()
     .exec();
 
 const getRolesWithPagination = async (search = {}, project = {}, optional: any) =>
   ROLE.find(search, project)
+    .populate({
+      path: 'createdBy',
+      select: 'firstName lastName'
+    })
     .sort({ _id: -1 })
     .skip(optional.skip)
     .limit(optional.limit)

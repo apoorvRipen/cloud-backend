@@ -1,4 +1,4 @@
-import { model, Schema } from 'mongoose';
+import { model, Schema, Types } from 'mongoose';
 
 const schema = new Schema({
     name: {
@@ -19,6 +19,10 @@ const schema = new Schema({
     isDeleted: {
         type: Boolean,
         default: false
+    },
+    createdBy: {
+        type: Types.ObjectId,
+        ref: 'user'
     }
 }, { timestamps: true });
 
