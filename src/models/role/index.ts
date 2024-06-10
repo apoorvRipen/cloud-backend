@@ -1,24 +1,39 @@
-import { model, Schema } from 'mongoose';
+import { model, Schema, Types } from 'mongoose';
 
-const schema = new Schema({
+const userRoleSchema = new Schema({
     name: {
         type: String,
+        required: true
     },
     description: {
         type: String,
+        required: true
+    },
+    role: {
+        type: String,
+        enum: ['USER', 'SUPERADMIN'],
+        required: true
+    },
+    isDefault: {
+        type: Boolean
+    },
+    status: {
+        type: String,
+        uppercase: true,
+        enum: ['ACTIVE', 'DELETED', 'INACTIVE'],
+        default: 'ACTIVE'
     },
     resources: {
         type: [String],
+        default: []
     },
-    isDefault: {
-        type: Boolean,
-        default: false
-    },
-    isDeleted: {
-        type: Boolean,
-        default: false
+    createdBy: {
+        type: Types.ObjectId,
+        required: true,
+        ref: 'user'
     }
-}, { timestamps: true });
+}, {
+    timestamps: true
+});
 
-const ROLE = model('role', schema);
-export { ROLE };
+export const ROLE = model('role', userRoleSchema);

@@ -1,4 +1,4 @@
-import { model, Schema } from 'mongoose';
+import { model, Schema, Types } from 'mongoose';
 import { IUser } from '../../lib';
 
 const phoneSchema = new Schema({
@@ -26,6 +26,15 @@ const schema = new Schema({
         type: String,
         enum: ['MALE', 'FEMALE', 'TRANSGENDER']
     },
+    status: {
+        type: String,
+        enum: ['ACTIVE', 'INACTIVE', 'DELETED']
+    },
+    _role: {
+        type: Types.ObjectId,
+        ref: 'role',
+        required: true
+    },
     contact: {
         email: {
             type: String,
@@ -33,10 +42,6 @@ const schema = new Schema({
         },
         mobileNumber: phoneSchema
     },
-    isDeleted: {
-        type: Boolean,
-        default: false
-    }
 }, { timestamps: true });
 
 const USER = model<IUser>('user', schema);

@@ -6,6 +6,12 @@
 # testing
 /coverage
 
+# Enviroment
+/.env
+/.env.local
+/.env.stage
+/.env.prod
+
 # production
 /build
 /dist
