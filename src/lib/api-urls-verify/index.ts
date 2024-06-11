@@ -1,5 +1,5 @@
 import URLPattern from 'url-pattern';
-import { userServiceUrls } from '../api-urla';
+import { userServiceUrls } from '../api-urls';
 
 
 const m200 = 200;
@@ -23,7 +23,10 @@ export const verifyResourcePermission = (
     const subDomain = formatSubDomain(domainPath);
     const [completeUrl] = urlLink.split('?');
     let permissionBlock: Gateway | undefined;
+
+    
     switch (subDomain) {
+        case 'auth':
         case 'user':
             permissionBlock = userServiceUrls[subDomain]
                 ? userServiceUrls[subDomain].find((url: Gateway) =>
@@ -34,6 +37,8 @@ export const verifyResourcePermission = (
             permissionBlock = undefined;
             break;
     }
+
+
 
     if (!permissionBlock) {
         return m404;
@@ -48,6 +53,8 @@ const formatSubDomain = (subDomain: string) => {
     if (subDomain.includes('-')) {
         return subDomain.replace(/-./g, match => match.charAt(1)
             .toUpperCase());
+    } else if ( subDomain === "authentication" ){
+        return 'auth'
     }
 
     return subDomain;

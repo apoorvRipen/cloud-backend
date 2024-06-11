@@ -38,5 +38,10 @@ export const user = [
         path: '/api/user/list/partial',
         permission: ['user.read', 'common.read'],
         method: 'GET'
+    },
+    {
+        path: '/api/authententication/logout',
+        permission: ['user.read', 'common.read'],
+        method: 'GET'
     }
 ];

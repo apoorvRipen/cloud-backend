@@ -6,15 +6,15 @@ const opts: any = {};
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 opts.secretOrKey = String(process.env.JWT_SECRET);
 passport.use(new Strategy(opts, (JWT_PAYLOAD, done) => {
-  getUserWithResources({ _id: JWT_PAYLOAD._id  })
+  getUserWithResources({ _id: JWT_PAYLOAD._id })
     .then(user => {
       if (user) {
-        done(undefined, user);
+        done(undefined, { ...user, jti: JWT_PAYLOAD.jti });
       } else {
         done(undefined, false);
       }
     })
-  .catch((err: any) => {
+    .catch((err: any) => {
       done(err, false);
     });
 }));

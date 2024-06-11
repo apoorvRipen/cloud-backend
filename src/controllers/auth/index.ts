@@ -1,13 +1,15 @@
 import { Router } from 'express';
 // import { v4 as uuid } from 'uuid';
-import { IUser, makeResponse } from '../../lib';
-// import { forgotPasswordValidation, loginValidation, resetPasswordValidation } from '../../middlewares';
-import { getUser } from '../../services';
+import { IUser, RESPONSE_MESSAGE, makeResponse } from '../../lib';
+import { forgotPasswordValidation, loginValidation, resetPasswordValidation } from '../../middlewares';
+import { addJti, editJti, generateJTI, getUser } from '../../services';
 import { assignToken, matchPassword } from '../../services/common';
 
+const privateRouter = Router();
 const router = Router();
 
 router.post('/login',
+    loginValidation,
     async (req, res) => {
         try {
             const user: IUser | null = await getUser({ 'contact.email': req.body.email, status: { $ne: 'DELETED' } });
@@ -21,7 +23,11 @@ router.post('/login',
             if (!passwordCorrect) {
                 return makeResponse(res, 400, false, 'Please enter valid Email and Password2');
             }
-            const token = assignToken({ name: user.firstName, email: user.contact?.email, role: user._role, _id: user._id },
+
+            const [jti, jtiExpiry] = generateJTI();
+            await addJti({ uid: user._id, jti, type: "LOGIN", jtiExpiry: jtiExpiry, deviceType: "WEB" });
+
+            const token = assignToken({ name: user.firstName, email: user.contact?.email, role: user._role, _id: user._id, jti },
                 String(process.env.JWT_SECRET));
 
             return makeResponse(res, 200, true, 'Login successfully',
@@ -196,4 +202,17 @@ router.post('/login',
 //         });
 // });
 
+privateRouter.get('/logout',
+    async (req, res) => {
+        try {
+            await editJti({ jti: (req.user as { jti: string }).jti, status: { $ne: "EXPIRED" }, type: "LOGIN" }, { status: "EXPIRED" }, { new: true });
+
+            return makeResponse(res, 200, true, "Logout Successfully", undefined);
+        } catch (error) {
+            const err = error instanceof Error ? error : { message: RESPONSE_MESSAGE.unknown_error };
+            return makeResponse(res, 400, false, err.message);
+        }
+    });
+
+export const authPrivateController = privateRouter;
 export const authController = router;
