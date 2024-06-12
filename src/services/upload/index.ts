@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
         const user = req.user as IUser;
 
         const exactDirectory = directoryFromMimetype(file.mimetype)
-        const path = `uploads/${user.firstName}/${exactDirectory}`;
+        const path = `uploads/${user.firstName.toLowerCase()}/${exactDirectory}`;
 
         createDirectory(path);
         cb(null, path); // Destination folder for uploaded files

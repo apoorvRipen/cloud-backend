@@ -36,7 +36,6 @@ const appLoader = async (app: express.Express, router: any) =>
       });
     });
 
-    createDirectory("upload/")
     server.listen(PORT , HOST, async () => {
       console.log(`* App is running at PORT: ${PORT} *`);
       resolve(true);
