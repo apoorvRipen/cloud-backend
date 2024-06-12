@@ -28,6 +28,7 @@ export const verifyResourcePermission = (
     switch (subDomain) {
         case 'auth':
         case 'user':
+        case 'object':
             permissionBlock = userServiceUrls[subDomain]
                 ? userServiceUrls[subDomain].find((url: Gateway) =>
                     new URLPattern(url.path).match(completeUrl) && url.method === method)

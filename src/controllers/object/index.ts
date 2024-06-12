@@ -1,31 +1,43 @@
 import { Router } from 'express';
-import { RESPONSE_MESSAGE, makeResponse } from '../../lib';
-import { addUserValidation, updateUserValidation } from '../../middlewares';
-import { addUser, updateUser, getUser, getUsers, getUsersWithPagination, getUsersCount, updateUsers } from '../../services';
+import { IUser, RESPONSE_MESSAGE, makeResponse } from '../../lib';
+import { addObjectValidation, updateObjectValidation } from '../../middlewares';
+import { addObject, updateObject, getObject, getObjects, getObjectsWithPagination, getObjectsCount, updateObjects, singleUpload } from '../../services';
+import multer from 'multer';
 
 const router = Router();
 
+// add single object 
+// add single folder
+// Update name only
+// Delete File 
+// List all the rooot object
+// all the object based on parent id 
+
 router
     .post(
-        '/',
-        addUserValidation,
+        '/upload',
+        singleUpload,
         async (req, res) => {
-            const { User } = req.body;
-            const search = {
-                'conatct.email': User.email,
-                'conatct.mobileNumber.number': User.mobileNumber.number
-            };
+            // singleUpload(req, res, (err) => {
+            //     if (err instanceof multer.MulterError) {
+            //         return makeResponse(res, 200, true, err.message);
+            //     } else if (err) {
+            //         return makeResponse(res, 200, true, RESPONSE_MESSAGE.unknown_error);
+            //     }
+            // })
+
+            await makeResponse(res, 200, true, RESPONSE_MESSAGE.create);
+        })
+
+    .post(
+        '/',
+        addObjectValidation,
+        async (req, res) => {
+            const { object } = req.body;
+            const user = req.user as IUser;
+
             try {
-                User.email
-                const exist = await getUser(search);
-
-                if (exist) {
-                    return makeResponse(res, 400, false, RESPONSE_MESSAGE.exit, undefined);
-                }
-
-                
-
-                const result = await addUser(req.body);
+                const result = await updateObject({ name: object.name }, { ...object, createdBy: user._id }, { upsert: true, new: true });
                 await makeResponse(res, 200, true, RESPONSE_MESSAGE.create, result);
             } catch (error) {
                 await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
@@ -33,25 +45,21 @@ router
         })
 
     .put('/',
-        updateUserValidation,
+        updateObjectValidation,
         async (req, res) => {
             const { _id, ...payload } = req.body;
-
             try {
 
-                if (payload?.User) {
-                    const isExist = await getUser({
-                        _id: { $ne: _id },
-                        'conatct.email': payload.User.email,
-                        'conatct.mobileNumber.number': payload?.User?.mobileNumber.number,
-                    });
+                const isExist = await getObject({
+                    _id: { $ne: _id },
+                    name: payload.name,
+                });
 
-                    if (isExist) {
-                        return makeResponse(res, 400, true, RESPONSE_MESSAGE.exit);
-                    }
+                if (isExist) {
+                    return makeResponse(res, 400, true, RESPONSE_MESSAGE.exit);
                 }
 
-                const result = await updateUser({ _id }, payload, { new: true })
+                const result = await updateObject({ _id }, payload, { new: true })
                 await makeResponse(res, 200, true, RESPONSE_MESSAGE.update, result);
             } catch (error) {
 
@@ -66,7 +74,7 @@ router
                 return makeResponse(res, 400, false, RESPONSE_MESSAGE.id_required, undefined);
             }
 
-            getUser({ _id, status: { $ne: "DELETED" } })
+            getObject({ _id, status: { $ne: "DELETED" } })
                 .then(async (result) => {
                     await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, result);
                 })
@@ -81,7 +89,7 @@ router
         if (!_ids || !_ids?.length) {
             return makeResponse(res, 400, false, RESPONSE_MESSAGE.id_required, undefined);
         }
-        updateUsers({ _id: { $in: _ids } }, { status: "DELETED" }, { new: true })
+        updateObjects({ _id: { $in: _ids } }, { status: "DELETED" }, { new: true })
             .then(async (result) => {
                 await makeResponse(res, 200, true, RESPONSE_MESSAGE.delete, result);
             })
@@ -119,15 +127,15 @@ router
                 if (query.page) { page = Number(query.page); }
                 if (query.limit) { limit = Number(query.limit); }
                 skip = (page - 1) * limit;
-                const documentsCount = await getUsersCount(searchQuery);
-                const data = await getUsersWithPagination(searchQuery, { __v: 0 }, { skip, limit });
+                const documentsCount = await getObjectsCount(searchQuery);
+                const data = await getObjectsWithPagination(searchQuery, { __v: 0 }, { skip, limit });
                 await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, data, {
                     page,
                     totalPages: Math.ceil(documentsCount / limit),
                     totalRecords: documentsCount
                 });
             } else {
-                const data = await getUsers(searchQuery, { __v: 0 });
+                const data = await getObjects(searchQuery, { __v: 0 });
                 await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, data);
             }
         } catch (error: any) {
@@ -135,4 +143,4 @@ router
         }
     });
 
-export const UserController = router;
+export const ObjectController = router;

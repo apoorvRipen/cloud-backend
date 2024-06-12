@@ -2,6 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import { createServer, Server } from 'http';
 import morgan from 'morgan';
+import { createDirectory } from '../../services'
 
 const PORT = Number(process.env.PORT) || 3000;
 const HOST: string = String(process.env.HOST || '0.0.0.0');
@@ -34,6 +35,8 @@ const appLoader = async (app: express.Express, router: any) =>
         message: 'the resource you are looking for is not found.'
       });
     });
+
+    createDirectory("upload/")
     server.listen(PORT , HOST, async () => {
       console.log(`* App is running at PORT: ${PORT} *`);
       resolve(true);

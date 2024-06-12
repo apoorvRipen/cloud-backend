@@ -16,9 +16,12 @@ const schema = new Schema({
     parentId: {
         type: String,
     },
-    isDeleted: {
-        type: Boolean,
-        default: false
+    isDirectory: {
+        type: Boolean
+    },
+    status: {
+        type: String,
+        enum: ["ACTIVE", "DELETED"]
     },
     createdBy: {
         type: Types.ObjectId,
