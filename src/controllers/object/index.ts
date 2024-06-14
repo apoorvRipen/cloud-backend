@@ -1,8 +1,7 @@
 import { Router } from 'express';
 import { IUser, RESPONSE_MESSAGE, makeResponse } from '../../lib';
 import { addObjectValidation, updateObjectValidation } from '../../middlewares';
-import { addObject, updateObject, getObject, getObjects, getObjectsWithPagination, getObjectsCount, updateObjects, singleUpload } from '../../services';
-import multer from 'multer';
+import { addObject, updateObject, getObject, getObjects, getObjectsWithPagination, getObjectsCount, updateObjects, singleUpload, generateThumbnail } from '../../services';
 
 const router = Router();
 
@@ -16,17 +15,16 @@ const router = Router();
 router
     .post(
         '/upload',
-        singleUpload,
-        async (req, res) => {
-            // singleUpload(req, res, (err) => {
-            //     if (err instanceof multer.MulterError) {
-            //         return makeResponse(res, 200, true, err.message);
-            //     } else if (err) {
-            //         return makeResponse(res, 200, true, RESPONSE_MESSAGE.unknown_error);
-            //     }
-            // })
+        async (req: any, res) => {
+            try {
+                const file = await singleUpload(req, res);
+                await generateThumbnail(file.path || "", file.originalname || "");
 
-            await makeResponse(res, 200, true, RESPONSE_MESSAGE.create);
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.create);
+            } catch (error) {
+                await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
+
+            }
         })
 
     .post(
