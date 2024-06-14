@@ -1,4 +1,5 @@
 import multer from 'multer';
+import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 import { IUser } from '../../lib';
@@ -10,6 +11,11 @@ interface ISingleUpload {
     originalname?: string
     mimetype?: string
     error?: any
+}
+
+interface IThumbnailGenerate {
+    originalPath: string
+    thumbnailPath: string
 }
 
 const directoryFromMimetype = (mime: string) => {
@@ -48,7 +54,7 @@ const singleUpload = (req: any, res: any): Promise<ISingleUpload> => new Promise
     })
 })
 
-const generateThumbnail = (imagePath: string, fileName: string, mimetype: string) => new Promise((resolve, reject) => {
+const generateThumbnail = (imagePath: string, fileName: string, mimetype: string): Promise<IThumbnailGenerate> => new Promise((resolve, reject) => {
     const splitedFileName = fileName.split(".");
     const allDirectories = imagePath.split("/");
     const originalPath = path.join(__dirname, "../../../", imagePath, "/", fileName);
@@ -59,9 +65,6 @@ const generateThumbnail = (imagePath: string, fileName: string, mimetype: string
 
     const fileType = directoryFromMimetype(mimetype)
 
-    console.log({ originalPath, thumbnailPath });
-
-
     if (fileType === "images") {
         sharp(originalPath)
             .resize(100, 100)
@@ -69,18 +72,26 @@ const generateThumbnail = (imagePath: string, fileName: string, mimetype: string
                 if (err) {
                     reject(err)
                 }
-                resolve(info)
+                resolve({ originalPath: imagePath + "/" + fileName, thumbnailPath: thumbnailPath + fileNameWithoutExt + "_thumbnail.webp" })
             });
-    } else if (fileType === "videos") {
-
-        
-
     }
-
 
 });
 
-export { singleUpload, generateThumbnail };
+const getFileBlob = (filePath: string) => new Promise((resolve, reject) => {
+    const originalPath = path.join(__dirname, "../../../", filePath);
+
+    fs.readFile(originalPath, (err, data) => {
+        if (err) {
+            reject(err)
+        }
+        
+        const imageBlob = Buffer.from(data).toString('base64');        
+        resolve(imageBlob)
+    });
+})
+
+export { singleUpload, generateThumbnail, getFileBlob };
 
 
 

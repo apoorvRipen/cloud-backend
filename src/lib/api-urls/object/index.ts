@@ -4,5 +4,11 @@ export const object = [
         // TODO: permission: ['object.write'],
         permission: ['user.write'],
         method: 'POST'
+    },
+    {
+        path: '/api/object',
+        // TODO: permission: ['object.write'],
+        permission: ['user.write'],
+        method: 'GET'
     }
 ];

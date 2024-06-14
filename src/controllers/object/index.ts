@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { IUser, RESPONSE_MESSAGE, makeResponse } from '../../lib';
 import { addObjectValidation, updateObjectValidation } from '../../middlewares';
-import { addObject, updateObject, getObject, getObjects, getObjectsWithPagination, getObjectsCount, updateObjects, singleUpload, generateThumbnail } from '../../services';
+import { addObject, updateObject, getObject, getObjects, getObjectsWithPagination, getObjectsCount, updateObjects, singleUpload, generateThumbnail, getFileBlob } from '../../services';
 
 const router = Router();
 
@@ -18,9 +18,9 @@ router
         async (req: any, res) => {
             try {
                 const file = await singleUpload(req, res);
-                await generateThumbnail(file.path || "", file.originalname || "", file.mimetype || "");
+                const path = await generateThumbnail(file.path || "", file.originalname || "", file.mimetype || "");
 
-                await makeResponse(res, 200, true, RESPONSE_MESSAGE.create);
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.create, path);
             } catch (error) {
                 await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
 
@@ -66,19 +66,25 @@ router
         })
 
     .get('/',
-        (req, res) => {
+        async (req, res) => {
             const { _id } = req.query as { _id: string };
             if (!_id) {
                 return makeResponse(res, 400, false, RESPONSE_MESSAGE.id_required, undefined);
             }
+            
+            try {
+                const blob = await getFileBlob("uploads/apoorv/images/Screenshot from 2024-06-06 00-09-16.png")
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, blob);
+            } catch (error: any) {
+                await makeResponse(res, 400, false, error.message, undefined);
+            }
 
-            getObject({ _id, status: { $ne: "DELETED" } })
-                .then(async (result) => {
-                    await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, result);
-                })
-                .catch(async error => {
-                    await makeResponse(res, 400, false, error.message, undefined);
-                });
+            // getObject({ _id, status: { $ne: "DELETED" } })
+            //     .then(async (result) => {
+            //         await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, result);
+            //     })
+            //     .catch(async error => {
+            //     });
         }
     )
 
