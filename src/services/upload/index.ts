@@ -8,6 +8,7 @@ interface ISingleUpload {
     success: boolean,
     path?: string
     originalname?: string
+    mimetype?: string
     error?: any
 }
 
@@ -26,9 +27,10 @@ const storage = multer.diskStorage({
         const user = req.user as IUser;
 
         const exactDirectory = directoryFromMimetype(file.mimetype)
+
         const path = `uploads/${user.firstName.toLowerCase()}/${exactDirectory}`;
         createDirectory(path);
-        req.objectPath = { path, originalname: file.originalname };
+        req.objectPath = { path, originalname: file.originalname, mimetype: file.mimetype };
         cb(null, path); // Destination folder for uploaded files
     },
     filename: (req, file, cb) => {
@@ -46,7 +48,7 @@ const singleUpload = (req: any, res: any): Promise<ISingleUpload> => new Promise
     })
 })
 
-const generateThumbnail = (imagePath: string, fileName: string) => new Promise ((resolve, reject) => {
+const generateThumbnail = (imagePath: string, fileName: string, mimetype: string) => new Promise((resolve, reject) => {
     const splitedFileName = fileName.split(".");
     const allDirectories = imagePath.split("/");
     const originalPath = path.join(__dirname, "../../../", imagePath, "/", fileName);
@@ -55,14 +57,27 @@ const generateThumbnail = (imagePath: string, fileName: string) => new Promise (
     const thumbnailPath = allDirectories.slice(0, allDirectories.length - 1).join("/").concat("/thumbnails/");
     createDirectory(thumbnailPath);
 
-    sharp(originalPath)
-        .resize(100, 100)
-        .toFile(thumbnailPath + fileNameWithoutExt + "_thumbnail.webp", (err, info) => {
-            if (err) {
-                reject(err)
-            }
-            resolve(info)
-        });
+    const fileType = directoryFromMimetype(mimetype)
+
+    console.log({ originalPath, thumbnailPath });
+
+
+    if (fileType === "images") {
+        sharp(originalPath)
+            .resize(100, 100)
+            .toFile(thumbnailPath + fileNameWithoutExt + "_thumbnail.webp", (err, info) => {
+                if (err) {
+                    reject(err)
+                }
+                resolve(info)
+            });
+    } else if (fileType === "videos") {
+
+        
+
+    }
+
+
 });
 
 export { singleUpload, generateThumbnail };

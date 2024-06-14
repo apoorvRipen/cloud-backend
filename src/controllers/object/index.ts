@@ -18,7 +18,7 @@ router
         async (req: any, res) => {
             try {
                 const file = await singleUpload(req, res);
-                await generateThumbnail(file.path || "", file.originalname || "");
+                await generateThumbnail(file.path || "", file.originalname || "", file.mimetype || "");
 
                 await makeResponse(res, 200, true, RESPONSE_MESSAGE.create);
             } catch (error) {
