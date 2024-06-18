@@ -16,8 +16,11 @@ const schema = new Schema({
     parentId: {
         type: String,
     },
-    isDirectory: {
-        type: Boolean
+    originalPath: {
+        type: String,
+    },
+    thumbnailPath: {
+        type: String,
     },
     status: {
         type: String,

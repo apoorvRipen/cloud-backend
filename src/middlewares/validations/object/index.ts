@@ -5,7 +5,7 @@ export const addObjectValidation = (req: any, res: any, next: any) => {
     const activity = joi.object({
         name: joi.string()
             .required(),
-        sizeInByte: joi.string()
+        sizeInByte: joi.number()
             .required(),
         type: joi.string()
             .required(),
@@ -13,8 +13,10 @@ export const addObjectValidation = (req: any, res: any, next: any) => {
             .required(),
         parentId: joi.string()
             .required(),
-        isDeleted: joi.boolean()
-            .optional(),
+        originalPath: joi.string()
+            .required(),
+        thumbnailPath: joi.string()
+            .required()
     });
 
     const { error } = activity.validate(req.body);
@@ -31,20 +33,9 @@ export const updateObjectValidation = (req: any, res: any, next: any) => {
         name: joi.string()
             .optional()
             .allow(""),
-        sizeInByte: joi.string()
-            .optional()
-            .allow(""),
-        type: joi.string()
-            .optional()
-            .allow(""),
-        extension: joi.string()
-            .optional()
-            .allow(""),
         parentId: joi.string()
             .optional()
-            .allow(""),
-        isDeleted: joi.boolean()
-            .optional(),
+            .allow("")
     });
 
     const { error } = activity.validate(req.body);

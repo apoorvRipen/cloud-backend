@@ -15,12 +15,14 @@ const router = Router();
 router
     .post(
         '/upload',
-        async (req: any, res) => {
+        async (req, res) => {
             try {
+
                 const file = await singleUpload(req, res);
+                console.log({ f: req.file, gg: req.files });
                 const path = await generateThumbnail(file.path || "", file.originalname || "", file.mimetype || "");
 
-                await makeResponse(res, 200, true, RESPONSE_MESSAGE.create, path);
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.create, { ...req.file, ...path });
             } catch (error) {
                 await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
 
@@ -31,8 +33,11 @@ router
         '/',
         addObjectValidation,
         async (req, res) => {
-            const { object } = req.body;
+            const object = req.body;
             const user = req.user as IUser;
+
+            console.log({ object });
+
 
             try {
                 const result = await updateObject({ name: object.name }, { ...object, createdBy: user._id }, { upsert: true, new: true });
@@ -71,7 +76,7 @@ router
             if (!_id) {
                 return makeResponse(res, 400, false, RESPONSE_MESSAGE.id_required, undefined);
             }
-            
+
             try {
                 const blob = await getFileBlob("uploads/apoorv/images/Screenshot from 2024-06-06 00-09-16.png")
                 await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, blob);
@@ -117,9 +122,6 @@ router
                         searchQuery.$or.push({ name: regx });
                     }
                     break;
-                default:
-                    searchQuery.$or.push({ [key]: query[key] });
-                    break;
             }
         });
 
@@ -133,7 +135,14 @@ router
                 skip = (page - 1) * limit;
                 const documentsCount = await getObjectsCount(searchQuery);
                 const data = await getObjectsWithPagination(searchQuery, { __v: 0 }, { skip, limit });
-                await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, data, {
+
+                const result = [];
+                for await (const ele of data) {
+                    const blob = await getFileBlob(String(ele.thumbnailPath));
+                    result.push({ ...ele, thumbnailPath: "data:image/webp;base64," + blob })
+                }
+
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, result, {
                     page,
                     totalPages: Math.ceil(documentsCount / limit),
                     totalRecords: documentsCount

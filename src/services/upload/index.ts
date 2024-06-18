@@ -33,7 +33,6 @@ const storage = multer.diskStorage({
         const user = req.user as IUser;
 
         const exactDirectory = directoryFromMimetype(file.mimetype)
-
         const path = `uploads/${user.firstName.toLowerCase()}/${exactDirectory}`;
         createDirectory(path);
         req.objectPath = { path, originalname: file.originalname, mimetype: file.mimetype };
