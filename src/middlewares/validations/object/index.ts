@@ -3,11 +3,11 @@ import { makeResponse } from '../../../lib';
 
 export const addObjectValidation = (req: any, res: any, next: any) => {
     const activity = joi.object({
-        name: joi.string()
+        originalName: joi.string()
             .required(),
         sizeInByte: joi.number()
             .required(),
-        type: joi.string()
+        originalType: joi.string()
             .required(),
         extension: joi.string()
             .required(),
@@ -30,7 +30,7 @@ export const updateObjectValidation = (req: any, res: any, next: any) => {
     const activity = joi.object({
         _id: joi.string()
             .required(),
-        name: joi.string()
+        originalName: joi.string()
             .optional()
             .allow(""),
         parentId: joi.string()

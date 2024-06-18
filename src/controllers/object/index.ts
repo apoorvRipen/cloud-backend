@@ -5,21 +5,12 @@ import { addObject, updateObject, getObject, getObjects, getObjectsWithPaginatio
 
 const router = Router();
 
-// add single object 
-// add single folder
-// Update name only
-// Delete File 
-// List all the rooot object
-// all the object based on parent id 
-
 router
     .post(
         '/upload',
         async (req, res) => {
             try {
-
                 const file = await singleUpload(req, res);
-                console.log({ f: req.file, gg: req.files });
                 const path = await generateThumbnail(file.path || "", file.originalname || "", file.mimetype || "");
 
                 await makeResponse(res, 200, true, RESPONSE_MESSAGE.create, { ...req.file, ...path });
@@ -36,11 +27,8 @@ router
             const object = req.body;
             const user = req.user as IUser;
 
-            console.log({ object });
-
-
             try {
-                const result = await updateObject({ name: object.name }, { ...object, createdBy: user._id }, { upsert: true, new: true });
+                const result = await updateObject({ originalName: object.originalName }, { ...object, createdBy: user._id }, { upsert: true, new: true });
                 await makeResponse(res, 200, true, RESPONSE_MESSAGE.create, result);
             } catch (error) {
                 await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
@@ -55,7 +43,7 @@ router
 
                 const isExist = await getObject({
                     _id: { $ne: _id },
-                    name: payload.name,
+                    originalName: payload.originalName,
                 });
 
                 if (isExist) {

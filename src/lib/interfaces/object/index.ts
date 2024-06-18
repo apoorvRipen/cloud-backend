@@ -2,13 +2,12 @@ import { Types } from 'mongoose';
 
 interface IObject {
     _id: Types.ObjectId,
-    name: string;
+    originalName: string;
     sizeInByte: number;
-    type: string;
+    originalType: string;
     extension: string;
     isFolder: boolean;
     parentId?: string;
-    isDeleted?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
 }

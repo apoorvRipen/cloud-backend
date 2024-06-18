@@ -1,25 +1,25 @@
 import { model, Schema, Types } from 'mongoose';
 
 const schema = new Schema({
-    name: {
+    originalName: {
         type: String,
     },
-    sizeInByte: {
-        type: Number,
-    },
-    type: {
-        type: String,
-    },
-    extension: {
-        type: String,
-    },
-    parentId: {
+    originalType: {
         type: String,
     },
     originalPath: {
         type: String,
     },
     thumbnailPath: {
+        type: String,
+    },
+    sizeInByte: {
+        type: Number,
+    },
+    extension: {
+        type: String,
+    },
+    parentId: {
         type: String,
     },
     status: {
