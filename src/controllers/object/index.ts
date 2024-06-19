@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { IUser, RESPONSE_MESSAGE, makeResponse } from '../../lib';
 import { addObjectValidation, updateObjectValidation } from '../../middlewares';
-import { addObject, updateObject, getObject, getObjects, getObjectsWithPagination, getObjectsCount, updateObjects, singleUpload, generateThumbnail, getFileBlob } from '../../services';
+import { updateObject, getObject, getObjects, getObjectsWithPagination, getObjectsCount, updateObjects, singleUpload, generateThumbnail, getFileBlob } from '../../services';
 
 const router = Router();
 
@@ -66,8 +66,9 @@ router
             }
 
             try {
-                const blob = await getFileBlob("uploads/apoorv/images/Screenshot from 2024-06-06 00-09-16.png")
-                await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, blob);
+                const object = await getObject({ _id, status: { $ne: "DELETED" } });
+                const blob = await getFileBlob(String(object?.originalPath))
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, { ...object, originalPath: blob });
             } catch (error: any) {
                 await makeResponse(res, 400, false, error.message, undefined);
             }
@@ -99,7 +100,7 @@ router
     .get('/list', async (req, res) => {
         const query = req.query as any;
 
-        const searchQuery: any = query.search ? { status: { $ne: "DELETED" }, $or: [] } : { status: { $ne: "DELETED" } };
+        const searchQuery: any = query.search ? { parentId: "root", status: { $ne: "DELETED" }, $or: [] } : { parentId: "root", status: { $ne: "DELETED" } };
 
         const keys = Object.keys(query);
         keys.map((key: string) => {
@@ -107,8 +108,11 @@ router
                 case 'search':
                     const regx = new RegExp(query.search ? query.search?.trim() : '' + '$', 'i');
                     if (searchQuery.$or) {
-                        searchQuery.$or.push({ name: regx });
+                        searchQuery.$or.push({ originalName: regx });
                     }
+                    break;
+                case 'parentId':
+                    searchQuery[key] = query[key];
                     break;
             }
         });
