@@ -25,8 +25,8 @@ export const user = [
         method: 'GET'
     },
     {
-        path: '/api/user/my-profile',
-        permission: ['user.read', 'common.read'],
+        path: '/api/user/profile',
+        permission: ['user.read'],
         method: 'GET'
     },
     {

@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { RESPONSE_MESSAGE, makeResponse } from '../../lib';
+import { IUser, RESPONSE_MESSAGE, makeResponse } from '../../lib';
 import { addUserValidation, updateUserValidation } from '../../middlewares';
-import { addUser, updateUser, getUser, getUsers, getUsersWithPagination, getUsersCount, updateUsers } from '../../services';
+import { addUser, updateUser, getUser, getUsers, getUsersWithPagination, getUsersCount, updateUsers, getUserWithResources } from '../../services';
 
 const router = Router();
 
@@ -23,7 +23,7 @@ router
                     return makeResponse(res, 400, false, RESPONSE_MESSAGE.exit, undefined);
                 }
 
-                
+
 
                 const result = await addUser(req.body);
                 await makeResponse(res, 200, true, RESPONSE_MESSAGE.create, result);
@@ -134,5 +134,18 @@ router
             await makeResponse(res, 400, false, error.message, undefined);
         }
     });
+
+router
+    .get(
+        '/profile',
+        async (req, res) => {
+            const user = req.user as IUser;
+            try {
+                const result = await getUserWithResources({ _id: user._id });
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.create, result);
+            } catch (error) {
+                await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
+            }
+        })
 
 export const UserController = router;

@@ -130,8 +130,12 @@ router
 
                 const result = [];
                 for await (const ele of data) {
-                    const blob = await getFileBlob(String(ele.thumbnailPath));
-                    result.push({ ...ele, thumbnailPath: "data:image/webp;base64," + blob })
+                    try {
+                        const blob = await getFileBlob(String(ele.thumbnailPath));
+                        result.push({ ...ele, thumbnailPath: "data:image/webp;base64," + blob })
+                    } catch (error) {
+                        result.push({ ...ele, thumbnailPath: undefined })
+                    }
                 }
 
                 await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, result, {

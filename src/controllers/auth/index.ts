@@ -2,7 +2,7 @@ import { Router } from 'express';
 // import { v4 as uuid } from 'uuid';
 import { IUser, RESPONSE_MESSAGE, makeResponse } from '../../lib';
 import { forgotPasswordValidation, loginValidation, resetPasswordValidation } from '../../middlewares';
-import { addJti, editJti, generateJTI, getUser } from '../../services';
+import { addJti, editJti, generateJTI, getUser, getUserWithResources } from '../../services';
 import { assignToken, matchPassword } from '../../services/common';
 
 const privateRouter = Router();
@@ -12,7 +12,7 @@ router.post('/login',
     loginValidation,
     async (req, res) => {
         try {
-            const user: IUser | null = await getUser({ 'contact.email': req.body.email, status: { $ne: 'DELETED' } });
+            const user: IUser | null = await getUserWithResources({ 'contact.email': req.body.email, status: { $ne: 'DELETED' } });
             if (!user) {
                 return makeResponse(res, 404, false, 'Please enter valid Email and Password');
             }
@@ -27,7 +27,7 @@ router.post('/login',
             const [jti, jtiExpiry] = generateJTI();
             await addJti({ uid: user._id, jti, type: "LOGIN", jtiExpiry: jtiExpiry, deviceType: "WEB" });
 
-            const token = assignToken({ name: user.firstName, email: user.contact?.email, role: user._role, _id: user._id, jti },
+            const token = assignToken({ name: user.firstName, email: user.contact?.email, role: {...user._role, resources: undefined}, _id: user._id, jti },
                 String(process.env.JWT_SECRET));
 
             return makeResponse(res, 200, true, 'Login successfully',

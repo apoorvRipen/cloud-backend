@@ -66,7 +66,7 @@ const generateThumbnail = (imagePath: string, fileName: string, mimetype: string
 
     if (fileType === "images") {
         sharp(originalPath)
-            .resize(100, 100)
+            .resize(250, 250)
             .toFile(thumbnailPath + fileNameWithoutExt + "_thumbnail.webp", (err, info) => {
                 if (err) {
                     reject(err)
@@ -79,15 +79,20 @@ const generateThumbnail = (imagePath: string, fileName: string, mimetype: string
 
 const getFileBlob = (filePath: string) => new Promise((resolve, reject) => {
     const originalPath = path.join(__dirname, "../../../", filePath);
+    
+    if (!fs.existsSync(originalPath)) {
+        reject("")
+    } else {
+        fs.readFile(originalPath, (err, data) => {
+            if (err) {
+                reject(err)
+            }
 
-    fs.readFile(originalPath, (err, data) => {
-        if (err) {
-            reject(err)
-        }
-        
-        const imageBlob = Buffer.from(data).toString('base64');        
-        resolve(imageBlob)
-    });
+            const imageBlob = Buffer.from(data).toString('base64');
+            resolve(imageBlob)
+        });
+    }
+
 })
 
 export { singleUpload, generateThumbnail, getFileBlob };
