@@ -9,5 +9,11 @@ export const adminRole = {
         'user.write',
         'user.read',
         'user.remove',
+        'object',
+        'object.write',
+        'object.read',
+        'object.remove',
+        'common.read',
+        'common.write',
     ]
 };
