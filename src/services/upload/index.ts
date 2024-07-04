@@ -15,7 +15,7 @@ interface ISingleUpload {
 
 interface IThumbnailGenerate {
     originalPath: string
-    thumbnailPath: string
+    thumbnailPath?: string
 }
 
 const directoryFromMimetype = (mime: string) => {
@@ -73,6 +73,8 @@ const generateThumbnail = (imagePath: string, fileName: string, mimetype: string
                 }
                 resolve({ originalPath: imagePath + "/" + fileName, thumbnailPath: thumbnailPath + fileNameWithoutExt + "_thumbnail.webp" })
             });
+    } else {
+        resolve({ originalPath: imagePath + "/" + fileName })
     }
 
 });

@@ -10,8 +10,15 @@ router
         '/upload',
         async (req, res) => {
             try {
+                let path = {}
                 const file = await singleUpload(req, res);
-                const path = await generateThumbnail(file.path || "", file.originalname || "", file.mimetype || "");
+                console.log({ file });
+                
+                if (file.path?.length) {
+                    path = await generateThumbnail(file.path || "", file.originalname || "", file.mimetype || "");
+                }
+                console.log({ "hiehie":"SDfcsd" });
+                
 
                 await makeResponse(res, 200, true, RESPONSE_MESSAGE.create, { ...req.file, ...path });
             } catch (error) {

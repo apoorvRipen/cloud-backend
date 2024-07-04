@@ -16,7 +16,7 @@ export const addObjectValidation = (req: any, res: any, next: any) => {
         originalPath: joi.string()
             .required(),
         thumbnailPath: joi.string()
-            .required()
+            .optional()
     });
 
     const { error } = activity.validate(req.body);
