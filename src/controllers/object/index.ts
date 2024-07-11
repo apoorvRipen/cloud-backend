@@ -1,32 +1,13 @@
+import archiver from 'archiver';
+import fs from 'fs'
 import { Router } from 'express';
 import { IUser, RESPONSE_MESSAGE, makeResponse } from '../../lib';
 import { addObjectValidation, updateObjectValidation } from '../../middlewares';
-import { updateObject, getObject, getObjects, getObjectsWithPagination, getObjectsCount, updateObjects, singleUpload, generateThumbnail, getFileBlob } from '../../services';
+import { updateObject, getObject, getObjects, getObjectsWithPagination, getObjectsCount, updateObjects, singleUpload, generateThumbnail, getFileBlob, getFilePath, generateZipPath } from '../../services';
 
 const router = Router();
 
 router
-    .post(
-        '/upload',
-        async (req, res) => {
-            try {
-                let path = {}
-                const file = await singleUpload(req, res);
-                console.log({ file });
-                
-                if (file.path?.length) {
-                    path = await generateThumbnail(file.path || "", file.originalname || "", file.mimetype || "");
-                }
-                console.log({ "hiehie":"SDfcsd" });
-                
-
-                await makeResponse(res, 200, true, RESPONSE_MESSAGE.create, { ...req.file, ...path });
-            } catch (error) {
-                await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
-
-            }
-        })
-
     .post(
         '/',
         addObjectValidation,
@@ -101,7 +82,62 @@ router
             .catch(async error => {
                 await makeResponse(res, 400, false, error.message, undefined);
             });
-    });
+    })
+
+    .post('/upload',
+        async (req, res) => {
+            try {
+                let path = {}
+                const file = await singleUpload(req, res);
+
+                if (file.path?.length) {
+                    path = await generateThumbnail(file.path || "", file.originalname || "", file.mimetype || "");
+                }
+
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.create, { ...req.file, ...path });
+            } catch (error) {
+                await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
+
+            }
+        })
+
+    .get(
+        '/export',
+        async (req, res) => {
+            try {
+                const user = req.user as IUser;
+                const { objectsIds } = req.query; // Assuming fileIds are passed as query parameters
+
+                const objects = await getObjects({ _id: { $in: objectsIds } });
+
+                // Creating a new zip archive
+                const archive = archiver('zip', {
+                    zlib: { level: 5 }
+                });
+
+                for await (const object of objects) {
+                    const { originalPath, originalName } = object;
+                    const filePath = getFilePath(String(originalPath));
+
+                    if( filePath ) {
+                        archive.file(filePath, { name: String(originalName) });
+                    }
+                }
+
+                const path = generateZipPath(user.firstName.toLowerCase());
+                const output = fs.createWriteStream(path);
+                archive.pipe(output);
+                archive.finalize();
+
+                output.on('close', () => {
+                    console.log(`Zip file created successfully.`);
+                });
+
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch);
+            } catch (error) {
+                await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
+            }
+        });
 
 router
     .get('/list', async (req, res) => {
@@ -127,11 +163,17 @@ router
         try {
             if (query.pagination && query.pagination === 'true') {
                 let page = 1;
-                let limit = 20;
+                let limit: number | undefined = 20;
                 let skip = 0;
                 if (query.page) { page = Number(query.page); }
                 if (query.limit) { limit = Number(query.limit); }
-                skip = (page - 1) * limit;
+
+                if (query.skip === undefined || query.skip === 'true') {
+                    skip = (page - 1) * limit;
+                } else {
+                    limit = ((page - 1) * limit + limit);
+                }
+
                 const documentsCount = await getObjectsCount(searchQuery);
                 const data = await getObjectsWithPagination(searchQuery, { __v: 0 }, { skip, limit });
 
@@ -147,7 +189,7 @@ router
 
                 await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, result, {
                     page,
-                    totalPages: Math.ceil(documentsCount / limit),
+                    totalPages: typeof limit === "number" && Math.ceil(documentsCount / limit),
                     totalRecords: documentsCount
                 });
             } else {

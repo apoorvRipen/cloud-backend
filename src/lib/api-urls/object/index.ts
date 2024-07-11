@@ -18,5 +18,10 @@ export const object = [
         path: '/api/object/list',
         permission: ['object.read'],
         method: 'GET'
+    },
+    {
+        path: '/api/object/export',
+        permission: ['object.read'],
+        method: 'GET'
     }
 ];

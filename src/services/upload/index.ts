@@ -97,7 +97,26 @@ const getFileBlob = (filePath: string) => new Promise((resolve, reject) => {
 
 })
 
-export { singleUpload, generateThumbnail, getFileBlob };
+const generateZipPath = (name: string) =>  {
+    const originalPath = path.join(__dirname, "../../../uploads/", name);
+
+    const zipFileName = `files_${Date.now()}.zip`;
+    const zipFilePath = path.join(originalPath, zipFileName);
+
+    return zipFilePath;
+}
+
+const getFilePath = (filePath: string) =>  {
+    const originalPath = path.join(__dirname, "../../../", filePath);
+
+    if (fs.existsSync(originalPath)) {
+        return originalPath
+    } else {
+        return null;
+    }
+}
+
+export { singleUpload, generateThumbnail, getFileBlob, getFilePath, generateZipPath };
 
 
 
