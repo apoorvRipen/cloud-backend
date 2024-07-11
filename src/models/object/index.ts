@@ -24,7 +24,8 @@ const schema = new Schema({
     },
     status: {
         type: String,
-        enum: ["ACTIVE", "DELETED"]
+        enum: ["ACTIVE", "DELETED"],
+        default: "ACTIVE"
     },
     createdBy: {
         type: Types.ObjectId,

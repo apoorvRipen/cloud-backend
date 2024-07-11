@@ -110,7 +110,13 @@ router
 
                 const objects = await getObjects({ _id: { $in: objectsIds } });
 
-                // Creating a new zip archive
+                if (!objects.length) {
+                    return makeResponse(res, 400, false, RESPONSE_MESSAGE.record_not_found, undefined);
+                }
+
+                const path = generateZipPath(user.firstName.toLowerCase());
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch);
+
                 const archive = archiver('zip', {
                     zlib: { level: 5 }
                 });
@@ -119,21 +125,18 @@ router
                     const { originalPath, originalName } = object;
                     const filePath = getFilePath(String(originalPath));
 
-                    if( filePath ) {
+                    if (filePath) {
                         archive.file(filePath, { name: String(originalName) });
                     }
                 }
 
-                const path = generateZipPath(user.firstName.toLowerCase());
-                const output = fs.createWriteStream(path);
+                const output = fs.createWriteStream(path.zipFileName);
                 archive.pipe(output);
                 archive.finalize();
-
                 output.on('close', () => {
                     console.log(`Zip file created successfully.`);
                 });
 
-                await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch);
             } catch (error) {
                 await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
             }

@@ -103,7 +103,7 @@ const generateZipPath = (name: string) =>  {
     const zipFileName = `files_${Date.now()}.zip`;
     const zipFilePath = path.join(originalPath, zipFileName);
 
-    return zipFilePath;
+    return {zipFilePath, zipFileName};
 }
 
 const getFilePath = (filePath: string) =>  {
