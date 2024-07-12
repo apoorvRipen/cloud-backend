@@ -12,6 +12,11 @@ export const object = [
     {
         path: '/api/object/export',
         permission: ['object.read'],
+        method: 'POST'
+    },
+    {
+        path: '/api/object/export-progress',
+        permission: ['object.read'],
         method: 'GET'
     },
     {

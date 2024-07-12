@@ -3,7 +3,7 @@ import fs from 'fs'
 import { Router } from 'express';
 import { IUser, RESPONSE_MESSAGE, makeResponse } from '../../lib';
 import { addObjectValidation, updateObjectValidation } from '../../middlewares';
-import { updateObject, getObject, getObjects, getObjectsWithPagination, getObjectsCount, updateObjects, singleUpload, generateThumbnail, getFileBlob, getFilePath, generateZipPath } from '../../services';
+import { updateObject, getObject, getObjects, getObjectsWithPagination, getObjectsCount, updateObjects, singleUpload, generateThumbnail, getFileBlob, getFilePath, generateZipPath, addExportObject, updateExportObject, getExportObjects } from '../../services';
 
 const router = Router();
 
@@ -101,12 +101,12 @@ router
             }
         })
 
-    .get(
+    .post(
         '/export',
         async (req, res) => {
             try {
                 const user = req.user as IUser;
-                const { objectsIds } = req.query; // Assuming fileIds are passed as query parameters
+                const { objectsIds } = req.body; // Assuming fileIds are passed as query parameters
 
                 const objects = await getObjects({ _id: { $in: objectsIds } });
 
@@ -115,28 +115,65 @@ router
                 }
 
                 const path = generateZipPath(user.firstName.toLowerCase());
-                await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch);
+                const exportObject = await addExportObject({
+                    name: path.zipFileName,
+                    path: path.uploadPath,
+                    totalFiles: objects.length,
+                    createdBy: user._id
+                });
 
+                const result = {
+                    _id: exportObject._id,
+                    name: exportObject.name,
+                    status: exportObject.status,
+                    totalFiles: exportObject.totalFiles,
+                    success: exportObject.success,
+                    failed: exportObject.failed,
+                }
+
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, result);
+
+                console.log("here");
                 const archive = archiver('zip', {
                     zlib: { level: 5 }
                 });
 
                 for await (const object of objects) {
-                    const { originalPath, originalName } = object;
+                    const { _id, originalPath, originalName } = object;
                     const filePath = getFilePath(String(originalPath));
 
                     if (filePath) {
                         archive.file(filePath, { name: String(originalName) });
+                        await updateExportObject({ _id: exportObject._id }, { $push: { success: _id } });
+                    } else {
+                        await updateExportObject({ _id: exportObject._id }, { $push: { failed: _id } });
                     }
                 }
 
-                const output = fs.createWriteStream(path.zipFileName);
+                const output = fs.createWriteStream(path.zipFilePath);
                 archive.pipe(output);
                 archive.finalize();
                 output.on('close', () => {
                     console.log(`Zip file created successfully.`);
                 });
 
+                await updateExportObject({ _id: exportObject._id }, { status: "COMPLETED" });
+            } catch (error) {
+                await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
+            }
+        })
+
+    .get(
+        '/export-progress',
+        async (req, res) => {
+            try {
+                const { _ids } = req.query as { _ids: string };
+                if (!_ids) {
+                    return makeResponse(res, 400, false, RESPONSE_MESSAGE.id_required, undefined);
+                }
+
+                const exportObject = await getExportObjects({ _id: { $in: _ids } });
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, exportObject);
             } catch (error) {
                 await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
             }

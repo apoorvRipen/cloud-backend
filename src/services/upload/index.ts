@@ -98,12 +98,14 @@ const getFileBlob = (filePath: string) => new Promise((resolve, reject) => {
 })
 
 const generateZipPath = (name: string) =>  {
-    const originalPath = path.join(__dirname, "../../../uploads/", name);
-
+    const uploadPath = `uploads/${name}/export`
     const zipFileName = `files_${Date.now()}.zip`;
+
+    createDirectory(uploadPath);
+    const originalPath = path.join(__dirname, "../../../", uploadPath);
     const zipFilePath = path.join(originalPath, zipFileName);
 
-    return {zipFilePath, zipFileName};
+    return {zipFilePath, zipFileName, uploadPath};
 }
 
 const getFilePath = (filePath: string) =>  {
