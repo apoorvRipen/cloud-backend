@@ -1,14 +1,20 @@
-import { model, Schema } from 'mongoose';
+import { model, Schema, Types } from 'mongoose';
 
 const schema = new Schema({
-    name: {
+    originalName: {
+        type: String,
+    },
+    originalType: {
+        type: String,
+    },
+    originalPath: {
+        type: String,
+    },
+    thumbnailPath: {
         type: String,
     },
     sizeInByte: {
         type: Number,
-    },
-    type: {
-        type: String,
     },
     extension: {
         type: String,
@@ -16,9 +22,14 @@ const schema = new Schema({
     parentId: {
         type: String,
     },
-    isDeleted: {
-        type: Boolean,
-        default: false
+    status: {
+        type: String,
+        enum: ["ACTIVE", "DELETED"],
+        default: "ACTIVE"
+    },
+    createdBy: {
+        type: Types.ObjectId,
+        ref: 'user'
     }
 }, { timestamps: true });
 
