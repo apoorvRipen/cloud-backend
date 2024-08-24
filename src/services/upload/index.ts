@@ -53,10 +53,26 @@ const singleUpload = (req: any, res: any): Promise<ISingleUpload> => new Promise
     })
 })
 
+// Function to find the project root by searching for package.json
+function findRootDir(currentDir: string) {
+    if (fs.existsSync(path.join(currentDir, 'package.json'))) {
+      return currentDir;
+    }
+    
+    const parentDir = path.dirname(currentDir);
+    
+    if (parentDir === currentDir) {
+      throw new Error('Could not find the root directory');
+    }
+  
+    return findRootDir(parentDir);
+  }
+
 const generateThumbnail = (imagePath: string, fileName: string, mimetype: string): Promise<IThumbnailGenerate> => new Promise((resolve, reject) => {
+    const rootPath = findRootDir(__dirname);
     const splitedFileName = fileName.split(".");
     const allDirectories = imagePath.split("/");
-    const originalPath = path.join(__dirname, "../../../", imagePath, "/", fileName);
+    const originalPath = path.join(rootPath, "/", imagePath, "/", fileName);
 
     const fileNameWithoutExt = splitedFileName.slice(0, splitedFileName.length - 1).join(".");
     const thumbnailPath = allDirectories.slice(0, allDirectories.length - 1).join("/").concat("/thumbnails/");
@@ -80,7 +96,8 @@ const generateThumbnail = (imagePath: string, fileName: string, mimetype: string
 });
 
 const getFileBlob = (filePath: string) => new Promise((resolve, reject) => {
-    const originalPath = path.join(__dirname, "../../../", filePath);
+    const rootPath = findRootDir(__dirname);
+    const originalPath = path.join(rootPath, "/", filePath);
     
     if (!fs.existsSync(originalPath)) {
         reject("")
@@ -100,16 +117,18 @@ const getFileBlob = (filePath: string) => new Promise((resolve, reject) => {
 const generateZipPath = (name: string) =>  {
     const uploadPath = `uploads/${name}/export`
     const zipFileName = `files_${Date.now()}.zip`;
+    const rootPath = findRootDir(__dirname);
 
     createDirectory(uploadPath);
-    const originalPath = path.join(__dirname, "../../../", uploadPath);
+    const originalPath = path.join(rootPath, "/", uploadPath);
     const zipFilePath = path.join(originalPath, zipFileName);
 
     return {zipFilePath, zipFileName, uploadPath};
 }
 
 const getFilePath = (filePath: string) =>  {
-    const originalPath = path.join(__dirname, "../../../", filePath);
+    const rootPath = findRootDir(__dirname);
+    const originalPath = path.join(rootPath, "/", filePath);
 
     if (fs.existsSync(originalPath)) {
         return originalPath
