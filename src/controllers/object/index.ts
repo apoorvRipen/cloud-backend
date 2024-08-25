@@ -16,7 +16,7 @@ router
             const user = req.user as IUser;
 
             try {
-                const result = await updateObject({ originalName: object.originalName }, { ...object, createdBy: user._id }, { upsert: true, new: true });
+                const result = await updateObject({ originalName: object.originalName }, { ...object, createdBy: user._id, status: 'ACTIVE' }, { upsert: true, new: true });
                 await makeResponse(res, 200, true, RESPONSE_MESSAGE.create, result);
             } catch (error) {
                 await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
@@ -56,7 +56,9 @@ router
             try {
                 const object = await getObject({ _id, status: { $ne: "DELETED" } });
                 const blob = await getFileBlob(String(object?.originalPath))
-                await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, { ...object, originalPath: blob });
+                const dataUri = `data:${object?.originalType};base64,${blob}`
+            
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, { ...object, originalPath: dataUri });
             } catch (error: any) {
                 await makeResponse(res, 400, false, error.message, undefined);
             }
@@ -182,7 +184,8 @@ router
 
                 const exportObject = await getExportObject({ _id: _id });
                 await updateExportObject({ _id: _id }, { status: "EXPIRED" });
-                const blob = await getFileBlob(String(exportObject?.path + "/" + exportObject?.name));
+                const uri = String(exportObject?.path + "/" + exportObject?.name);
+                const blob = await getFileBlob(String(exportObject?.path + "/" + exportObject?.name), true);
                 await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, { ...exportObject, originalPath: blob, path: undefined });
             } catch (error) {
                 await makeResponse(res, 400, false, (error as { message: string }).message, undefined);

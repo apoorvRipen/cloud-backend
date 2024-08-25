@@ -2,6 +2,7 @@ import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
+import { PassThrough } from 'stream';
 import { IUser } from '../../lib';
 import { createDirectory } from '../common';
 
@@ -56,17 +57,17 @@ const singleUpload = (req: any, res: any): Promise<ISingleUpload> => new Promise
 // Function to find the project root by searching for package.json
 function findRootDir(currentDir: string) {
     if (fs.existsSync(path.join(currentDir, 'package.json'))) {
-      return currentDir;
+        return currentDir;
     }
-    
+
     const parentDir = path.dirname(currentDir);
-    
+
     if (parentDir === currentDir) {
-      throw new Error('Could not find the root directory');
+        throw new Error('Could not find the root directory');
     }
-  
+
     return findRootDir(parentDir);
-  }
+}
 
 const generateThumbnail = (imagePath: string, fileName: string, mimetype: string): Promise<IThumbnailGenerate> => new Promise((resolve, reject) => {
     const rootPath = findRootDir(__dirname);
@@ -95,10 +96,10 @@ const generateThumbnail = (imagePath: string, fileName: string, mimetype: string
 
 });
 
-const getFileBlob = (filePath: string) => new Promise((resolve, reject) => {
+const getFileBlob = (filePath: string, removeFile:boolean = false) => new Promise((resolve, reject) => {
     const rootPath = findRootDir(__dirname);
     const originalPath = path.join(rootPath, "/", filePath);
-    
+
     if (!fs.existsSync(originalPath)) {
         reject("")
     } else {
@@ -109,12 +110,20 @@ const getFileBlob = (filePath: string) => new Promise((resolve, reject) => {
 
             const imageBlob = Buffer.from(data).toString('base64');
             resolve(imageBlob)
+
+            if( removeFile ) {
+                fs.unlink(originalPath, (unlinkErr) => {
+                    if (unlinkErr) {
+                      console.error('Error deleting file:', unlinkErr);
+                    }
+                  });
+            }
         });
     }
 
 })
 
-const generateZipPath = (name: string) =>  {
+const generateZipPath = (name: string) => {
     const uploadPath = `uploads/${name}/export`
     const zipFileName = `files_${Date.now()}.zip`;
     const rootPath = findRootDir(__dirname);
@@ -123,10 +132,10 @@ const generateZipPath = (name: string) =>  {
     const originalPath = path.join(rootPath, "/", uploadPath);
     const zipFilePath = path.join(originalPath, zipFileName);
 
-    return {zipFilePath, zipFileName, uploadPath};
+    return { zipFilePath, zipFileName, uploadPath };
 }
 
-const getFilePath = (filePath: string) =>  {
+const getFilePath = (filePath: string) => {
     const rootPath = findRootDir(__dirname);
     const originalPath = path.join(rootPath, "/", filePath);
 
