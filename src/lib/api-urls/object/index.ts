@@ -20,6 +20,11 @@ export const object = [
         method: 'GET'
     },
     {
+        path: '/api/object/export-zip',
+        permission: ['object.read'],
+        method: 'GET'
+    },
+    {
         path: '/api/object',
         permission: ['object.write'],
         method: 'POST'

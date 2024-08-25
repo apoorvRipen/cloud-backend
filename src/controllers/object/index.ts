@@ -3,7 +3,7 @@ import fs from 'fs'
 import { Router } from 'express';
 import { IUser, RESPONSE_MESSAGE, makeResponse } from '../../lib';
 import { addObjectValidation, updateObjectValidation } from '../../middlewares';
-import { updateObject, getObject, getObjects, getObjectsWithPagination, getObjectsCount, updateObjects, singleUpload, generateThumbnail, getFileBlob, getFilePath, generateZipPath, addExportObject, updateExportObject, getExportObjects } from '../../services';
+import { updateObject, getObject, getObjects, getObjectsWithPagination, getObjectsCount, updateObjects, singleUpload, generateThumbnail, getFileBlob, getFilePath, generateZipPath, addExportObject, updateExportObject, getExportObjects, getExportObject } from '../../services';
 
 const router = Router();
 
@@ -60,13 +60,6 @@ router
             } catch (error: any) {
                 await makeResponse(res, 400, false, error.message, undefined);
             }
-
-            // getObject({ _id, status: { $ne: "DELETED" } })
-            //     .then(async (result) => {
-            //         await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, result);
-            //     })
-            //     .catch(async error => {
-            //     });
         }
     )
 
@@ -133,7 +126,6 @@ router
 
                 await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, result);
 
-                console.log("here");
                 const archive = archiver('zip', {
                     zlib: { level: 5 }
                 });
@@ -174,6 +166,24 @@ router
 
                 const exportObject = await getExportObjects({ _id: { $in: _ids } });
                 await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, exportObject);
+            } catch (error) {
+                await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
+            }
+        })
+
+    .get(
+        '/export-zip',
+        async (req, res) => {
+            try {
+                const { _id } = req.query as { _id: string };
+                if (!_id) {
+                    return makeResponse(res, 400, false, RESPONSE_MESSAGE.id_required, undefined);
+                }
+
+                const exportObject = await getExportObject({ _id: _id });
+                await updateExportObject({ _id: _id }, { status: "EXPIRED" });
+                const blob = await getFileBlob(String(exportObject?.path + "/" + exportObject?.name));
+                await makeResponse(res, 200, true, RESPONSE_MESSAGE.fetch, { ...exportObject, originalPath: blob, path: undefined });
             } catch (error) {
                 await makeResponse(res, 400, false, (error as { message: string }).message, undefined);
             }
